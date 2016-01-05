@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">我的涂鸦</string>
+    <string name="text_property_dialog_title">文字属性</string>
+    <string name="text_size">文字大小：</string>
+    <string name="text_rotation">旋转角度：%d°</string>
+    <string name="text_color_r_g_b">文字颜色：【%s】</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+</resources>
