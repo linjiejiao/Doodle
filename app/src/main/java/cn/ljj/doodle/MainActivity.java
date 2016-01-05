@@ -28,7 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class MainActivity extends Activity implements View.OnClickListener, View.OnLongClickListener, TextWatcher, TransformTextView.OnTextStateChangeListener {
+public class MainActivity extends Activity implements View.OnClickListener, TextWatcher, TransformTextView.OnTextStateChangeListener {
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String IMAGE_DIRECTORY = Environment.getExternalStorageDirectory().getPath() + "/.drawing_temp/";
     private static final int REQ_CODE_GET_IMG = 1;
@@ -36,6 +36,7 @@ public class MainActivity extends Activity implements View.OnClickListener, View
     private ImageView mBackgroundLayer;
     private EditText mEditText;
     private Button mBtnAddText;
+    private Button mBtnsetBackground;
     private Button mBtnOK;
     private TransformTextView mCurrentText = null;
     private ProgressDialog mProgressDialog = null;
@@ -53,10 +54,21 @@ public class MainActivity extends Activity implements View.OnClickListener, View
         mEditText = (EditText) findViewById(R.id.edit_text);
         mBtnAddText = (Button) findViewById(R.id.btn_add_text);
         mBtnOK = (Button) findViewById(R.id.btn_ok);
+        mBtnsetBackground = (Button) findViewById(R.id.btn_set_bg);
+        mBtnsetBackground.setOnClickListener(this);
         mBtnAddText.setOnClickListener(this);
         mBtnOK.setOnClickListener(this);
-        mBackgroundLayer.setOnLongClickListener(this);
         mEditText.addTextChangedListener(this);
+        Intent intent = getIntent();
+        if (intent != null) {
+            String action = intent.getAction();
+            if (Intent.ACTION_SEND.equals(action)) {
+                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (uri != null) {
+                    setBackground(uri);
+                }
+            }
+        }
     }
 
     @Override
@@ -68,6 +80,16 @@ public class MainActivity extends Activity implements View.OnClickListener, View
                     return;
                 }
                 addNewText(content);
+                break;
+            case R.id.btn_set_bg:
+                try {
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    intent.setType("image/*");
+                    startActivityForResult(intent, REQ_CODE_GET_IMG);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 break;
             case R.id.btn_ok:
                 showWaitingDialog(true);
@@ -108,36 +130,23 @@ public class MainActivity extends Activity implements View.OnClickListener, View
     }
 
     @Override
-    public boolean onLongClick(View v) {
-        switch (v.getId()) {
-            case R.id.img_background:
-                try {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_GET_CONTENT);
-                    intent.setType("image/*");
-                    startActivityForResult(intent, REQ_CODE_GET_IMG);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
-        }
-        return true;
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_CODE_GET_IMG) {
             if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
-                ContentResolver cr = getContentResolver();
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
-                    mBackgroundLayer.setImageBitmap(bitmap);
-                } catch (FileNotFoundException e) {
-                    Log.e("Exception", e.getMessage(), e);
-                }
+                setBackground(uri);
             }
+        }
+    }
+
+    private void setBackground(Uri uri) {
+        ContentResolver cr = getContentResolver();
+        try {
+            Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
+            mBackgroundLayer.setImageBitmap(bitmap);
+        } catch (FileNotFoundException e) {
+            Log.e("Exception", e.getMessage(), e);
         }
     }
 
@@ -188,7 +197,7 @@ public class MainActivity extends Activity implements View.OnClickListener, View
 
     @Override
     public void afterTextChanged(Editable s) {
-        if(mCurrentText != null){
+        if (mCurrentText != null) {
             mCurrentText.setText(s);
         }
     }
@@ -218,9 +227,9 @@ public class MainActivity extends Activity implements View.OnClickListener, View
             File f = new File(path);
             if (f != null && f.exists() && f.isFile()) {
                 Uri uri = Uri.fromFile(f);
-                if (!openExactActivity(uri)) {
+//                if (!openExactActivity(uri)) {
                     openChooserActivity(uri);
-                }
+//                }
             }
             showWaitingDialog(false);
         }
