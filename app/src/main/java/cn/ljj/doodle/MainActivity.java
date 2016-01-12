@@ -82,13 +82,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Text
                 addNewText(content);
                 break;
             case R.id.btn_set_bg:
-                try {
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_GET_CONTENT);
-                    intent.setType("image/*");
-                    startActivityForResult(intent, REQ_CODE_GET_IMG);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (!getImage(true)) {
+                    getImage(false);
                 }
                 break;
             case R.id.btn_ok:
@@ -96,6 +91,22 @@ public class MainActivity extends Activity implements View.OnClickListener, Text
                 new SaveAndShareTask().execute();
                 break;
         }
+    }
+
+    private boolean getImage(boolean galleryOnly) {
+        try {
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            if (galleryOnly) {
+                intent.setPackage("com.android.gallery3d");
+            }
+            startActivityForResult(intent, REQ_CODE_GET_IMG);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private boolean openExactActivity(Uri uri) {
@@ -228,7 +239,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Text
             if (f != null && f.exists() && f.isFile()) {
                 Uri uri = Uri.fromFile(f);
 //                if (!openExactActivity(uri)) {
-                    openChooserActivity(uri);
+                openChooserActivity(uri);
 //                }
             }
             showWaitingDialog(false);
